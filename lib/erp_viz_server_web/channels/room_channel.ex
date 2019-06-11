@@ -59,7 +59,5 @@ defimpl Jason.Encoder, for: ElixirRigidPhysics.World do
     end
 
     Jason.Encode.map( %ElixirRigidPhysics.World{ world | bodies: clean_bodies}, opts)
-
-    #Jason.Encode.map(Map.take(value, [:timestep, bodies), opts)
   end
 end

@@ -58,6 +58,8 @@ socket.connect();
 let channel = socket.channel("room:lobby", {});
 let chatInput = document.getElementById("chat-input");
 let messagesContainer = document.getElementById("messages");
+let $vizContainer = document.getElementById('viz-container');
+
 chatInput.addEventListener("keypress", event => {
   if (event.keyCode == 13) {
     channel.push("new_msg", {body: chatInput.value});
@@ -86,10 +88,7 @@ channel.on("server_error_msg", payload => {
 
 channel.on("sim_msg", payload => {
   let world = JSON.parse(payload.body);
-  let messageItem = document.createElement("div")
-  messageItem.className = "world-message";
-  messageItem.innerText = `${world.timestep}`
-  messagesContainer.appendChild(messageItem)
+  r_syncScene(world);
 })
 
 
@@ -97,7 +96,85 @@ channel.join()
   .receive("ok", resp => { console.log("Joined successfully", resp) })
   .receive("error", resp => { console.log("Unable to join", resp) });
 
+//import {THREE} from '../../node_modules/three-full/builds/Three.es.js';
+import * as THREE from 'three';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+var scene = new THREE.Scene();
+var camera = new THREE.PerspectiveCamera( 75, 1, 0.1, 1000 );
 
+var renderer = new THREE.WebGLRenderer();
+renderer.setSize( 400, 400 );
 
+let controls = new OrbitControls( camera, renderer.domElement );
+
+controls.enableDamping = true; // an animation loop is required when either damping or auto-rotation are enabled
+controls.dampingFactor = 0.25;
+
+controls.screenSpacePanning = false;
+
+controls.minDistance = 1;
+controls.maxDistance = 500;
+
+controls.maxPolarAngle = Math.PI / 2;
+
+var activeBodies = {};
+
+function r_createBody(ref, body) {
+  var geometry = new THREE.BoxGeometry( body.length, body.width, body.height );
+  var color = new THREE.Color( 0xffffff );
+  color.setHex( Math.random() * 0xffffff );
+  var material = new THREE.MeshBasicMaterial( { color: color } );
+  var cube = new THREE.Mesh( geometry, material );
+  cube.matrix.fromArray(body.transform);
+  cube.matrixAutoUpdate = false;
+  activeBodies[ref] = cube;
+  scene.add( cube );
+}
+
+function r_updateBody(ref, body) {
+  activeBodies[ref].matrix.fromArray(body.transform);
+}
+
+function r_destroyBody(ref) {
+  let body = activeBodies[ref];
+  if (body) {
+    scene.remove(body);
+    delete activeBodies[ref];
+  }
+}
+
+function r_syncScene(world) {
+  console.log( JSON.stringify(world));
+
+  var bodies = world.bodies;
+
+  var vizRefs = Object.keys(activeBodies);
+  var simRefs = Object.keys(bodies);
+
+  // check for updated or destroyed bodies
+  for( let vref in vizRefs) {
+    if ( simRefs.includes(vizRefs[vref]) == true ){
+      r_updateBody(vizRefs[vref], bodies[vizRefs[vref]]);
+    } else {
+      r_destroyBody(vizRefs[vref]);
+    }
+  }
+
+  // check for created bodies
+  for( let sref in simRefs) {
+    if ( vizRefs.includes(simRefs[sref]) == false){
+      r_createBody(simRefs[sref],bodies[simRefs[sref]]);
+    }
+  }  
+}
+
+function animate() {
+  requestAnimationFrame( animate );
+  controls.update(); // only required if controls.enableDamping = true, or if controls.autoRotate = true
+	renderer.render( scene, camera );
+}
+animate();
+
+$vizContainer.appendChild( renderer.domElement );
 
 export default socket;
