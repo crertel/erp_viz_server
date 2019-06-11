@@ -61,14 +61,34 @@ let messagesContainer = document.getElementById("messages");
 chatInput.addEventListener("keypress", event => {
   if (event.keyCode == 13) {
     channel.push("new_msg", {body: chatInput.value});
+    let messageItem = document.createElement("div")
+    messageItem.className = "cli-input";
+    messageItem.innerText = `${chatInput.value}`
+    messagesContainer.appendChild(messageItem)
 
     chatInput.value = "";
   }
 });
 
 channel.on("new_msg", payload => {
-  let messageItem = document.createElement("li")
-  messageItem.innerText = `[${Date()}] ${payload.body}`
+  let messageItem = document.createElement("div")
+  messageItem.className = "cli-message";
+  messageItem.innerText = `${payload.body}`
+  messagesContainer.appendChild(messageItem)
+})
+
+channel.on("server_error_msg", payload => {
+  let messageItem = document.createElement("div")
+  messageItem.className = "error-message";
+  messageItem.innerText = `${payload.body}`
+  messagesContainer.appendChild(messageItem)
+})
+
+channel.on("sim_msg", payload => {
+  let world = JSON.parse(payload.body);
+  let messageItem = document.createElement("div")
+  messageItem.className = "world-message";
+  messageItem.innerText = `${world.timestep}`
   messagesContainer.appendChild(messageItem)
 })
 

@@ -11,7 +11,7 @@ defmodule ErpVizServer.Application do
       # Start the Ecto repository
       ErpVizServer.Repo,
       # Start the endpoint when the application starts
-      ErpVizServerWeb.Endpoint
+      ErpVizServerWeb.Endpoint,
       # Starts a worker by calling: ErpVizServer.Worker.start_link(arg)
       # {ErpVizServer.Worker, arg},
     ]

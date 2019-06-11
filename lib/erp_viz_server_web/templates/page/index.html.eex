@@ -1,2 +1,5 @@
-<div id="messages"></div>
 <input id="chat-input" type="text"></input>
+<div id="messages" class="cli-box"></div>
+
+<div id="viz-container">
+</div>

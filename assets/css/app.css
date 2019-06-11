@@ -1,3 +1,30 @@
 /* This file is for your main application css. */
 
 @import "./phoenix.css";
+
+#viz-container {
+
+}
+
+.cli-box {
+  padding: 10px;
+  height: 300px;
+  overflow-y: scroll;
+  background-color: #000000;
+}
+
+.cli-message {
+  color: #fff;
+}
+
+.error-message {
+    color: #a22;
+}
+
+.world-message {
+    color: #aff;
+  }
+
+.cli-input {
+  color: #2a2;
+}
