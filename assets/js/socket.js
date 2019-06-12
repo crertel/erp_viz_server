@@ -54,40 +54,109 @@ let socket = new Socket("/socket", {params: {token: window.userToken}})
 // Finally, connect to the socket:
 socket.connect();
 
+function escapeHtml(unsafe) {
+  return (unsafe||'')
+       .replace(/&/g, "&amp;")
+       .replace(/</g, "&lt;")
+       .replace(/>/g, "&gt;")
+       .replace(/"/g, "&quot;")
+       .replace(/'/g, "&#039;");
+}
+let LOG = {
+  SIM_STEPS: false
+};
 // Now that you are connected, you can join channels with a topic:
 let channel = socket.channel("room:lobby", {});
 let chatInput = document.getElementById("chat-input");
 let messagesContainer = document.getElementById("messages");
 let $vizContainer = document.getElementById('viz-container');
 
-chatInput.addEventListener("keypress", event => {
-  if (event.keyCode == 13) {
-    channel.push("new_msg", {body: chatInput.value});
-    let messageItem = document.createElement("div")
-    messageItem.className = "cli-input";
-    messageItem.innerText = `${chatInput.value}`
-    messagesContainer.appendChild(messageItem)
+let commandBuffer = [];
+let currCommand = 0;
 
+chatInput.addEventListener("keydown", event => {
+  console.log(event.keyCode);
+  var input = chatInput.value;
+  if (event.keyCode == 13) {
+    commandBuffer.push(input);
+    console.log(commandBuffer);
+    let messageItem = document.createElement("div");
+    messageItem.className = "cli-input";
+    messageItem.innerText = `${input}`;
+    messagesContainer.appendChild(messageItem);
     chatInput.value = "";
+
+    if (input[0] == '$') {
+      let jsCode = input.substring(1);
+      let ret;
+      try {
+        ret = eval(jsCode);
+      } catch (e) {
+        ret = e.toString();
+      }      
+      messageItem = document.createElement("div");
+      messageItem.className = "client-eval";
+      messageItem.innerText = `LOCL: ${escapeHtml(ret)}`;
+      messagesContainer.appendChild(messageItem);
+      scrollToLastMessage();
+    } else if (input[0] == '#') {
+      channel.push("server_eval", {body: input.substring(1)});
+    } else {
+      channel.push("new_msg", {body: input});
+    }
+  } else if (event.keyCode == 38) { // arrow up
+    console.log('arrow up');
+    chatInput.value = commandBuffer[currCommand]  || "";
+    currCommand--;
+    if (currCommand < 0 ) {
+      currCommand = commandBuffer.length-1;
+    }
+    event.preventDefault();
+  } else if (event.keyCode == 40) { // arrow down
+    console.log('arrow down');
+    chatInput.value = commandBuffer[currCommand] || "";
+    currCommand++;
+    if (currCommand >= commandBuffer.length ) {
+      currCommand = 0;
+    }
+    event.preventDefault();
   }
 });
+
+
+function scrollToLastMessage() {
+  messagesContainer.scrollTop = messagesContainer.scrollHeight;
+}
 
 channel.on("new_msg", payload => {
   let messageItem = document.createElement("div")
   messageItem.className = "cli-message";
-  messageItem.innerText = `${payload.body}`
-  messagesContainer.appendChild(messageItem)
+  messageItem.innerText = `MESG: ${payload.body}`;
+  messagesContainer.appendChild(messageItem);
+  scrollToLastMessage();
+})
+
+channel.on("server_eval_result", payload => {
+  let messageItem = document.createElement("div")
+  messageItem.className = "server-message";
+  messageItem.innerText = `SRVR: ${payload.body}`;
+  messagesContainer.appendChild(messageItem);
+  scrollToLastMessage();
 })
 
 channel.on("server_error_msg", payload => {
   let messageItem = document.createElement("div")
   messageItem.className = "error-message";
-  messageItem.innerText = `${payload.body}`
-  messagesContainer.appendChild(messageItem)
+  messageItem.innerText = `SRVR: ${payload.body}`;
+  messagesContainer.appendChild(messageItem);
+  scrollToLastMessage();
 })
 
 channel.on("sim_msg", payload => {
   let world = JSON.parse(payload.body);
+  if (LOG.SIM_STEPS) {
+    console.log(payload.body);
+  }
   r_syncScene(world);
 })
 
@@ -103,24 +172,23 @@ var scene = new THREE.Scene();
 var camera = new THREE.PerspectiveCamera( 75, 1, 0.1, 1000 );
 
 var renderer = new THREE.WebGLRenderer();
-renderer.setSize( 400, 400 );
 
+
+//$vizContainer.width;
 let controls = new OrbitControls( camera, renderer.domElement );
 
 controls.enableDamping = true; // an animation loop is required when either damping or auto-rotation are enabled
 controls.dampingFactor = 0.25;
-
+controls.enableKeys = false;
 controls.screenSpacePanning = false;
-
 controls.minDistance = 1;
 controls.maxDistance = 500;
-
 controls.maxPolarAngle = Math.PI / 2;
 
 var activeBodies = {};
 
 function r_createBody(ref, body) {
-  var geometry = new THREE.BoxGeometry( body.length, body.width, body.height );
+  var geometry = new THREE.BoxGeometry( body.width, body.length, body.depth );
   var color = new THREE.Color( 0xffffff );
   color.setHex( Math.random() * 0xffffff );
   var material = new THREE.MeshBasicMaterial( { color: color } );
@@ -144,8 +212,6 @@ function r_destroyBody(ref) {
 }
 
 function r_syncScene(world) {
-  console.log( JSON.stringify(world));
-
   var bodies = world.bodies;
 
   var vizRefs = Object.keys(activeBodies);
@@ -176,5 +242,7 @@ function animate() {
 animate();
 
 $vizContainer.appendChild( renderer.domElement );
+let vizDimensions = $vizContainer.getBoundingClientRect();
+renderer.setSize( vizDimensions.width, vizDimensions.height );
 
 export default socket;

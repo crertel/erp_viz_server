@@ -1,5 +1,10 @@
-<input id="chat-input" type="text"></input>
-<div id="messages" class="cli-box"></div>
-
-<div id="viz-container">
+<div id="main-pane">
+    <div id="cli-pane">
+        <input id="chat-input" type="text"></input>
+        <div id="messages" class="cli-box"></div>
+    </div>
+    <div id="viz-container">
+    </div>
 </div>
+
+

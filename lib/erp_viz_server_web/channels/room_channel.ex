@@ -11,9 +11,14 @@ defmodule ErpVizServerWeb.RoomChannel do
   end
 
   def handle_in("new_msg", %{"body"=> body}, socket) do
+    broadcast!(socket, "new_msg", %{body: body})
+    {:noreply, socket}
+  end
+
+  def handle_in("server_eval", %{"body"=> body}, socket) do
     try do
       {ans, bindings} = Code.eval_string(body, [socket: socket ] ++ Map.get(socket.assigns, :bindings, []), __ENV__)
-      broadcast!(socket, "new_msg", %{body: inspect(ans)})
+      broadcast!(socket, "server_eval_result", %{body: inspect(ans)})
     {:noreply, assign(socket, :bindings, bindings)}
   rescue
     error -> IO.inspect( error, label: "Error")
