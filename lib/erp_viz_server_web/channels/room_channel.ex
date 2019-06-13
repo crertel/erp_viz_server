@@ -50,17 +50,9 @@ defimpl Jason.Encoder, for: ElixirRigidPhysics.World do
 
       clean_body = for {k, v} <- body, into: %{} do
         case {k,v} do
-          {:transform, {m11,m12,m13,m14,
-               m21,m22,m23,m24,
-               m31,m32,m33,m34,
-               m41,m42,m43,m44} = _mat4x4} -> {k, [m11,m12,m13,m14,
-               m21,m22,m23,m24,
-               m31,m32,m33,m34,
-               m41,m42,m43,m44]}
-          {:position, {tx,ty,tz}} -> {k, [tx,ty,tz]}
-          {:rotation, {q1,q2,q3,q4}} -> {k, [q1,q2,q3,q4]}
-          {:moi, {i1,i2,i3}} -> {k, [i1,i2,i3]}
-          {k, v} -> {k, v}
+          {k, v} when is_reference(v) -> {k, "#{inspect v}"}
+          {k, v} when is_tuple(v)-> {k, Tuple.to_list(v)}
+          {k, v} -> {k,v}
         end
       end
 

@@ -78,7 +78,7 @@ let currCommand = 0;
 
 chatInput.addEventListener("keydown", event => {
   console.log(event.keyCode);
-  var input = chatInput.value;
+  var input = chatInput.value.trim();
   if (event.keyCode == 13) {
     // record command to buffer and add to cli
     commandBuffer.push(input);    
@@ -174,8 +174,23 @@ channel.join()
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 var scene = new THREE.Scene();
-var camera = new THREE.PerspectiveCamera( 75, 1, 0.1, 1000 );
 
+scene.add( new THREE.AmbientLight(0x333333));
+
+var directionalLight = new THREE.DirectionalLight( 0xccffff, 0.5 );
+directionalLight.position.set(0,1,0);
+scene.add( directionalLight );
+
+directionalLight = new THREE.DirectionalLight( 0xffccff, 0.5 );
+directionalLight.position.set(0,-1,0);
+scene.add( directionalLight );
+
+directionalLight = new THREE.DirectionalLight( 0xffffcc, 0.5 );
+directionalLight.position.set(1,0,1);
+scene.add( directionalLight );
+
+
+var camera = new THREE.PerspectiveCamera( 75, 1, 0.1, 1000 );
 var renderer = new THREE.WebGLRenderer();
 
 
@@ -185,10 +200,13 @@ let controls = new OrbitControls( camera, renderer.domElement );
 controls.enableDamping = true; // an animation loop is required when either damping or auto-rotation are enabled
 controls.dampingFactor = 0.25;
 controls.enableKeys = false;
-controls.screenSpacePanning = false;
+controls.screenSpacePanning = true;
 controls.minDistance = 1;
 controls.maxDistance = 500;
-controls.maxPolarAngle = Math.PI / 2;
+
+//controls.minPolarAngle = -Math.PI/2;
+//controls.maxPolarAngle = Math.PI / 2;
+
 
 var activeBodies = {};
 
@@ -196,10 +214,11 @@ function r_createBody(ref, body) {
   var geometry = new THREE.BoxGeometry( body.width, body.length, body.depth );
   var color = new THREE.Color( 0xffffff );
   color.setHex( Math.random() * 0xffffff );
-  var material = new THREE.MeshBasicMaterial( { color: color } );
+  var material = new THREE.MeshPhongMaterial( { color: color } );
   var cube = new THREE.Mesh( geometry, material );
-  cube.matrix.fromArray(body.transform);
-  cube.matrixAutoUpdate = false;
+  cube.position.set(body.position[0], body.position[1], body.position[2])
+  cube.setRotationFromQuaternion( new THREE.Quaternion(body.orientation[0],body.orientation[1],body.orientation[2],body.orientation[3]))
+
   activeBodies[ref] = cube;
   scene.add( cube );
 }
