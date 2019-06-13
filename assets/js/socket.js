@@ -55,13 +55,15 @@ let socket = new Socket("/socket", {params: {token: window.userToken}})
 socket.connect();
 
 function escapeHtml(unsafe) {
-  return (unsafe||'')
+  console.log(unsafe);
+  return `${(unsafe||'')}`
        .replace(/&/g, "&amp;")
        .replace(/</g, "&lt;")
        .replace(/>/g, "&gt;")
        .replace(/"/g, "&quot;")
        .replace(/'/g, "&#039;");
-}
+};
+
 let LOG = {
   SIM_STEPS: false
 };
@@ -78,8 +80,8 @@ chatInput.addEventListener("keydown", event => {
   console.log(event.keyCode);
   var input = chatInput.value;
   if (event.keyCode == 13) {
-    commandBuffer.push(input);
-    console.log(commandBuffer);
+    // record command to buffer and add to cli
+    commandBuffer.push(input);    
     let messageItem = document.createElement("div");
     messageItem.className = "cli-input";
     messageItem.innerText = `${input}`;
@@ -87,6 +89,7 @@ chatInput.addEventListener("keydown", event => {
     chatInput.value = "";
 
     if (input[0] == '$') {
+      // handle client commands
       let jsCode = input.substring(1);
       let ret;
       try {
@@ -100,8 +103,10 @@ chatInput.addEventListener("keydown", event => {
       messagesContainer.appendChild(messageItem);
       scrollToLastMessage();
     } else if (input[0] == '#') {
+      // handle server command
       channel.push("server_eval", {body: input.substring(1)});
     } else {
+      // handle normal chat msg
       channel.push("new_msg", {body: input});
     }
   } else if (event.keyCode == 38) { // arrow up

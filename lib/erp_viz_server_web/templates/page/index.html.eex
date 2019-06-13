@@ -1,6 +1,6 @@
 <div id="main-pane">
     <div id="cli-pane">
-        <input id="chat-input" type="text"></input>
+        <textarea id="chat-input" type="text"></textarea>
         <div id="messages" class="cli-box"></div>
     </div>
     <div id="viz-container">

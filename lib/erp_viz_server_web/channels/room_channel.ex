@@ -18,13 +18,13 @@ defmodule ErpVizServerWeb.RoomChannel do
   def handle_in("server_eval", %{"body"=> body}, socket) do
     try do
       {ans, bindings} = Code.eval_string(body, [socket: socket ] ++ Map.get(socket.assigns, :bindings, []), __ENV__)
-      broadcast!(socket, "server_eval_result", %{body: inspect(ans)})
-    {:noreply, assign(socket, :bindings, bindings)}
-  rescue
-    error -> IO.inspect( error, label: "Error")
-            broadcast!(socket, "server_error_msg", %{body: inspect(error)})
-            {:noreply, socket}
-  end
+      push(socket, "server_eval_result", %{body: inspect(ans)} )
+      {:noreply, assign(socket, :bindings, bindings)}
+    rescue
+      error -> IO.inspect( error, label: "Error")
+              push(socket, "server_error_msg", %{body: inspect(error)} )
+              {:noreply, socket}
+    end
   end
 
   def handle_info(:after_join, socket) do
@@ -37,6 +37,7 @@ defmodule ErpVizServerWeb.RoomChannel do
   end
 
   def handle_info({:world_update, world}, socket) do
+    IO.inspect world, label: "ahhhh"
     push(socket, "sim_msg", %{body: Jason.encode!(world)} )
     {:noreply, socket}
   end
@@ -56,6 +57,9 @@ defimpl Jason.Encoder, for: ElixirRigidPhysics.World do
                m21,m22,m23,m24,
                m31,m32,m33,m34,
                m41,m42,m43,m44]}
+          {:position, {tx,ty,tz}} -> {k, [tx,ty,tz]}
+          {:rotation, {q1,q2,q3,q4}} -> {k, [q1,q2,q3,q4]}
+          {:moi, {i1,i2,i3}} -> {k, [i1,i2,i3]}
           {k, v} -> {k, v}
         end
       end
