@@ -217,14 +217,15 @@ function r_createBody(ref, body) {
   var material = new THREE.MeshPhongMaterial( { color: color } );
   var cube = new THREE.Mesh( geometry, material );
   cube.position.set(body.position[0], body.position[1], body.position[2])
-  cube.setRotationFromQuaternion( new THREE.Quaternion(body.orientation[0],body.orientation[1],body.orientation[2],body.orientation[3]))
+  cube.setRotationFromQuaternion( new THREE.Quaternion(body.orientation[1],body.orientation[2],body.orientation[3],body.orientation[0]))
 
   activeBodies[ref] = cube;
   scene.add( cube );
 }
 
 function r_updateBody(ref, body) {
-  activeBodies[ref].matrix.fromArray(body.transform);
+  activeBodies[ref].position.set(body.position[0], body.position[1], body.position[2]);  
+  activeBodies[ref].setRotationFromQuaternion( new THREE.Quaternion(body.orientation[1],body.orientation[2],body.orientation[3],body.orientation[0]))
 }
 
 function r_destroyBody(ref) {

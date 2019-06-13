@@ -37,7 +37,6 @@ defmodule ErpVizServerWeb.RoomChannel do
   end
 
   def handle_info({:world_update, world}, socket) do
-    IO.inspect world, label: "ahhhh"
     push(socket, "sim_msg", %{body: Jason.encode!(world)} )
     {:noreply, socket}
   end
