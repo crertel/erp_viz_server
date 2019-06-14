@@ -40,6 +40,11 @@ defmodule ErpVizServerWeb.RoomChannel do
     push(socket, "sim_msg", %{body: Jason.encode!(world)} )
     {:noreply, socket}
   end
+
+  def handle_info(msg, state) do
+    IO.inspect(msg, label: "no idea what this is")
+    {:noreply, state}
+  end
 end
 
 defimpl Jason.Encoder, for: ElixirRigidPhysics.World do
