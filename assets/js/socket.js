@@ -77,11 +77,10 @@ let commandBuffer = [];
 let currCommand = 0;
 
 chatInput.addEventListener("keydown", event => {
-  console.log(event.keyCode);
   var input = chatInput.value.trim();
   if (event.keyCode == 13) {
     // record command to buffer and add to cli
-    commandBuffer.push(input);    
+    commandBuffer.push(input);
     let messageItem = document.createElement("div");
     messageItem.className = "cli-input";
     messageItem.innerText = `${input}`;
@@ -110,7 +109,6 @@ chatInput.addEventListener("keydown", event => {
       channel.push("new_msg", {body: input});
     }
   } else if (event.keyCode == 38) { // arrow up
-    console.log('arrow up');
     chatInput.value = commandBuffer[currCommand]  || "";
     currCommand--;
     if (currCommand < 0 ) {
@@ -118,7 +116,6 @@ chatInput.addEventListener("keydown", event => {
     }
     event.preventDefault();
   } else if (event.keyCode == 40) { // arrow down
-    console.log('arrow down');
     chatInput.value = commandBuffer[currCommand] || "";
     currCommand++;
     if (currCommand >= commandBuffer.length ) {
@@ -194,8 +191,6 @@ scene.add( directionalLight );
 var camera = new THREE.PerspectiveCamera( 75, 1, 0.1, 1000 );
 var renderer = new THREE.WebGLRenderer();
 
-
-//$vizContainer.width;
 let controls = new OrbitControls( camera, renderer.domElement );
 
 controls.enableDamping = true; // an animation loop is required when either damping or auto-rotation are enabled
@@ -205,20 +200,16 @@ controls.screenSpacePanning = true;
 controls.minDistance = 1;
 controls.maxDistance = 500;
 
-//controls.minPolarAngle = -Math.PI/2;
-//controls.maxPolarAngle = Math.PI / 2;
-
-
 var activeBodies = {};
 
 function r_createBody(ref, body) {
   let geometry;
-  switch(body.type){
-    case "box": geometry = new THREE.BoxGeometry( body.width, body.length, body.depth ); break;
-    case "sphere": geometry = new THREE.SphereGeometry(body.radius, 16, 12); break;
+  let shape = body.shape;
+  switch(shape[0]){
+    case "box": geometry = new THREE.BoxGeometry( shape[1], shape[2], shape[3] ); break;
+    case "sphere": geometry = new THREE.SphereGeometry(shape[1], 16, 12); break;
     case "capsule":  var createCapsule = require('primitive-capsule');
-                     console.log(body);
-                     var capsule = createCapsule(body.end_radius, body.axial_length);
+                     var capsule = createCapsule(shape[2], shape[1]);
                      geometry = new THREE.BufferGeometry();
 
                      let cells = capsule.cells.reduce( function(acc, el, i) {
@@ -244,10 +235,7 @@ function r_createBody(ref, body) {
                      geometry.setIndex(cells);
                      geometry.addAttribute("position", new THREE.BufferAttribute( pos, 3));
                      geometry.addAttribute("normal", new THREE.BufferAttribute( norms, 3));
-                     
-                     console.log(capsule);
-                     console.log(geometry);
-                     break;                        
+                     break;
     default: break;
   }
   

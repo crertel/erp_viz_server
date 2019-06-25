@@ -55,18 +55,23 @@ defmodule ErpVizServerWeb.RoomChannel do
 end
 
 defimpl Jason.Encoder, for: ElixirRigidPhysics.World do
-  def encode(%ElixirRigidPhysics.World{bodies: bodies} = world, opts) do
-
-    clean_bodies = for {ref, body} <- bodies, into: %{} do
-
-      clean_body = for {k, v} <- body, into: %{} do
-        case {k,v} do
-          {k, v} when is_reference(v) -> {k, "#{inspect v}"}
-          {k, v} when is_tuple(v)-> {k, Tuple.to_list(v)}
-          {k, v} -> {k,v}
-        end
+  defp sanitize_terms(term) when is_map(term) do
+    for {k, v} <- term, into: %{} do
+      case {k,v} do
+        {k, v} -> {k, sanitize_terms(v)}
       end
+    end
+  end
+  defp sanitize_terms(term) when is_reference(term), do: "#{inspect term}"
+  defp sanitize_terms(term) when is_tuple(term), do:  Tuple.to_list(term)
+  defp sanitize_terms(term), do: term
 
+  def encode(%ElixirRigidPhysics.World{bodies: bodies} = world, opts) do
+    alias ElixirRigidPhysics.Dynamics.Body
+
+    clean_bodies = for {ref, raw_body} <- bodies, into: %{} do
+      body_map = Body.to_map(raw_body)
+      clean_body = sanitize_terms(body_map)
       {inspect(ref), clean_body}
     end
 
