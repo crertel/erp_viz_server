@@ -45,6 +45,13 @@ defmodule ErpVizServerWeb.RoomChannel do
     IO.inspect(msg, label: "no idea what this is")
     {:noreply, state}
   end
+
+  def ref_string_to_ref(str) do
+    str
+    |> String.replace_leading("#Reference", "#Ref")
+    |> String.to_charlist()
+    |> :erlang.list_to_ref()
+  end
 end
 
 defimpl Jason.Encoder, for: ElixirRigidPhysics.World do

@@ -170,9 +170,10 @@ channel.join()
   .receive("ok", resp => { console.log("Joined successfully", resp) })
   .receive("error", resp => { console.log("Unable to join", resp) });
 
-//import {THREE} from '../../node_modules/three-full/builds/Three.es.js';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+//import { CapsuleBufferGeometry } from 'three-js-capsule-geometry/dist/browser/three-js-capsule-geometry.js';
+
 var scene = new THREE.Scene();
 
 scene.add( new THREE.AmbientLight(0x333333));
@@ -211,16 +212,54 @@ controls.maxDistance = 500;
 var activeBodies = {};
 
 function r_createBody(ref, body) {
-  var geometry = new THREE.BoxGeometry( body.width, body.length, body.depth );
+  let geometry;
+  switch(body.type){
+    case "box": geometry = new THREE.BoxGeometry( body.width, body.length, body.depth ); break;
+    case "sphere": geometry = new THREE.SphereGeometry(body.radius, 16, 12); break;
+    case "capsule":  var createCapsule = require('primitive-capsule');
+                     console.log(body);
+                     var capsule = createCapsule(body.end_radius, body.axial_length);
+                     geometry = new THREE.BufferGeometry();
+
+                     let cells = capsule.cells.reduce( function(acc, el, i) {
+                      acc[ (3*i) + 0] = el[0];
+                      acc[ (3*i) + 1] = el[1];
+                      acc[ (3*i) + 2] = el[2];
+                      return acc;
+                     }, new Array(capsule.cells.length));
+
+                     let pos = capsule.positions.reduce( function(acc, el, i) {
+                      acc[ (3*i) + 0] = el[0];
+                      acc[ (3*i) + 1] = el[1];
+                      acc[ (3*i) + 2] = el[2];
+                      return acc;
+                     }, new Float32Array(capsule.positions.length*3));
+
+                     let norms = capsule.normals.reduce( function(acc, el, i) {
+                      acc[ (3*i) + 0] = el[0];
+                      acc[ (3*i) + 1] = el[1];
+                      acc[ (3*i) + 2] = el[2];
+                      return acc;
+                     }, new Float32Array(capsule.normals.length*3));
+                     geometry.setIndex(cells);
+                     geometry.addAttribute("position", new THREE.BufferAttribute( pos, 3));
+                     geometry.addAttribute("normal", new THREE.BufferAttribute( norms, 3));
+                     
+                     console.log(capsule);
+                     console.log(geometry);
+                     break;                        
+    default: break;
+  }
+  
   var color = new THREE.Color( 0xffffff );
   color.setHex( Math.random() * 0xffffff );
   var material = new THREE.MeshPhongMaterial( { color: color } );
-  var cube = new THREE.Mesh( geometry, material );
-  cube.position.set(body.position[0], body.position[1], body.position[2])
-  cube.setRotationFromQuaternion( new THREE.Quaternion(body.orientation[1],body.orientation[2],body.orientation[3],body.orientation[0]))
+  var object = new THREE.Mesh( geometry, material );
+  object.position.set(body.position[0], body.position[1], body.position[2])
+  object.setRotationFromQuaternion( new THREE.Quaternion(body.orientation[1],body.orientation[2],body.orientation[3],body.orientation[0]))
 
-  activeBodies[ref] = cube;
-  scene.add( cube );
+  activeBodies[ref] = object;
+  scene.add( object );
 }
 
 function r_updateBody(ref, body) {
