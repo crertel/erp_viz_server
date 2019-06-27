@@ -187,6 +187,11 @@ directionalLight = new THREE.DirectionalLight( 0xffffcc, 0.5 );
 directionalLight.position.set(1,0,1);
 scene.add( directionalLight );
 
+var size = 20;
+var divisions = 40;
+var gridHelper = new THREE.GridHelper( size, divisions, "#2A2", "#888" );
+scene.add( gridHelper );
+
 
 var camera = new THREE.PerspectiveCamera( 75, 1, 0.1, 1000 );
 var renderer = new THREE.WebGLRenderer();

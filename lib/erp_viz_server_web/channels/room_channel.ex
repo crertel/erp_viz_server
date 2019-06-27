@@ -31,7 +31,7 @@ defmodule ErpVizServerWeb.RoomChannel do
     #{:ok, pid} = ERP.start_link()
 
     socket = assign(socket, :erps, ERPS)
-    :ok = ERP.subscribe_to_world_updates(ERPS)
+    ERP.subscribe_to_world_updates(ERPS)
 
     push(socket, "new_msg", %{body: "Welcome aboard!"})
     {:noreply, socket}
