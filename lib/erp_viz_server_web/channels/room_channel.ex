@@ -28,8 +28,6 @@ defmodule ErpVizServerWeb.RoomChannel do
   end
 
   def handle_info(:after_join, socket) do
-    #{:ok, pid} = ERP.start_link()
-
     socket = assign(socket, :erps, ERPS)
     ERP.subscribe_to_world_updates(ERPS)
 
@@ -76,6 +74,7 @@ defimpl Jason.Encoder, for: ElixirRigidPhysics.World do
       {inspect(ref), clean_body}
     end
 
-    Jason.Encode.map( %ElixirRigidPhysics.World{ world | bodies: clean_bodies}, opts)
+    clean_world = Map.delete(world, :broadphase_acceleration_structure)
+    Jason.Encode.map( %ElixirRigidPhysics.World{ clean_world | bodies: clean_bodies}, opts)
   end
 end
