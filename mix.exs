@@ -43,7 +43,7 @@ defmodule ErpVizServer.MixProject do
       {:gettext, "~> 0.11"},
       {:jason, "~> 1.0"},
       {:plug_cowboy, "~> 2.0"},
-      {:graphmath, "~> 2.0.0"},
+      {:graphmath, "~> 2.1.0"},
       {:elixir_rigid_physics, path: "../elixir_rigid_physics"}
     ]
   end

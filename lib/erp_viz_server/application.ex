@@ -13,6 +13,7 @@ defmodule ErpVizServer.Application do
       # Start the endpoint when the application starts
       ErpVizServerWeb.Endpoint,
       # Starts a worker by calling: ErpVizServer.Worker.start_link(arg)
+      {ElixirRigidPhysics, [name: ERPS]}
       # {ErpVizServer.Worker, arg},
     ]
 
