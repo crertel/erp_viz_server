@@ -81,6 +81,8 @@ chatInput.addEventListener("keydown", event => {
   if (event.keyCode == 13) {
     // record command to buffer and add to cli
     commandBuffer.push(input);
+    currCommand = commandBuffer.length-1;
+
     let messageItem = document.createElement("div");
     messageItem.className = "cli-input";
     messageItem.innerText = `${input}`;
@@ -162,14 +164,12 @@ channel.on("sim_msg", payload => {
   r_syncScene(world);
 })
 
-
 channel.join()
   .receive("ok", resp => { console.log("Joined successfully", resp) })
   .receive("error", resp => { console.log("Unable to join", resp) });
 
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-//import { CapsuleBufferGeometry } from 'three-js-capsule-geometry/dist/browser/three-js-capsule-geometry.js';
 
 var scene = new THREE.Scene();
 
