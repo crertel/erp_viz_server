@@ -78,7 +78,7 @@ let currCommand = 0;
 
 chatInput.addEventListener("keydown", event => {
   var input = chatInput.value.trim();
-  if (event.keyCode == 13) {
+  if (event.keyCode == 13 && input.length > 0) {
     // record command to buffer and add to cli
     commandBuffer.push(input);
     currCommand = commandBuffer.length-1;
@@ -110,18 +110,20 @@ chatInput.addEventListener("keydown", event => {
       // handle normal chat msg
       channel.push("new_msg", {body: input});
     }
+    event.preventDefault();
   } else if (event.keyCode == 38) { // arrow up
     chatInput.value = commandBuffer[currCommand]  || "";
     currCommand--;
     if (currCommand < 0 ) {
-      currCommand = commandBuffer.length-1;
+      currCommand = 0;
     }
     event.preventDefault();
-  } else if (event.keyCode == 40) { // arrow down
-    chatInput.value = commandBuffer[currCommand] || "";
-    currCommand++;
-    if (currCommand >= commandBuffer.length ) {
-      currCommand = 0;
+  } else if (event.keyCode == 40) { // arrow down    
+    if (currCommand < commandBuffer.length ) {
+      chatInput.value = commandBuffer[currCommand] || "";
+      currCommand++;        
+    } else {
+      chatInput.value = "";
     }
     event.preventDefault();
   }
