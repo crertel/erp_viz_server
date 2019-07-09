@@ -189,6 +189,9 @@ directionalLight = new THREE.DirectionalLight( 0xffffcc, 0.5 );
 directionalLight.position.set(1,0,1);
 scene.add( directionalLight );
 
+var collisionsGroup = new THREE.Group();
+scene.add(collisionsGroup);
+
 var size = 20;
 var divisions = 40;
 var gridHelper = new THREE.GridHelper( size, divisions, "#2A2", "#888" );
@@ -199,6 +202,8 @@ var camera = new THREE.PerspectiveCamera( 75, 1, 0.1, 1000 );
 var renderer = new THREE.WebGLRenderer();
 
 let controls = new OrbitControls( camera, renderer.domElement );
+
+
 
 controls.enableDamping = true; // an animation loop is required when either damping or auto-rotation are enabled
 controls.dampingFactor = 0.25;
@@ -248,7 +253,7 @@ function r_createBody(ref, body) {
   
   var color = new THREE.Color( 0xffffff );
   color.setHex( Math.random() * 0xffffff );
-  var material = new THREE.MeshPhongMaterial( { color: color } );
+  var material = new THREE.MeshPhongMaterial( { color: color, wireframe: true } );
   var object = new THREE.Mesh( geometry, material );
   object.position.set(body.position[0], body.position[1], body.position[2])
   object.setRotationFromQuaternion( new THREE.Quaternion(body.orientation[1],body.orientation[2],body.orientation[3],body.orientation[0]))
@@ -290,7 +295,23 @@ function r_syncScene(world) {
     if ( vizRefs.includes(simRefs[sref]) == false){
       r_createBody(simRefs[sref],bodies[simRefs[sref]]);
     }
-  }  
+  }
+
+  // show the collision info
+  collisionsGroup.children.forEach( (c) => collisionsGroup.remove(c) );
+  for( let c_index in world.collisions) {
+    // c = {:contact_manifold, [{contacts}], world_normal}
+    //  @type contact_point :: record(:contact_point, world_point: Vec3.vec3(), depth: number)
+    var c = world.collisions[c_index];
+
+    console.log(c);
+    var normal = (new THREE.Vector3()).fromArray(c[2]);
+    var contacts = c[1];
+    var contactPoint = contacts[0][1];
+    var length = 1.0;
+    var point = new THREE.ArrowHelper(normal, (new THREE.Vector3()).fromArray(contactPoint), length);
+    collisionsGroup.add(point);
+  }
 }
 
 function animate() {
