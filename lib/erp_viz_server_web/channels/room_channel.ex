@@ -48,6 +48,28 @@ defmodule ErpVizServerWeb.RoomChannel do
     end
   end
 
+  def setup_scene(:ball_pit) do
+    ERP.remove_all_bodies_from_world(ERPS);
+    num_spheres = 100
+    bodies = for _i <- 0..num_spheres, into: [] do
+      sphere = ERP.Geometry.Sphere.create( 3 * :random.uniform())
+      ERP.Dynamics.Body.create(sphere, position: Vec3.random_box() |> Vec3.scale(50.0) |> Vec3.subtract({25.0,25.0,25.0}))
+    end
+
+    ERP.add_bodies_to_world(ERPS, bodies)
+  end
+
+  def setup_scene(:ball_pit_cramped) do
+    ERP.remove_all_bodies_from_world(ERPS);
+    num_spheres = 100
+    bodies = for _i <- 0..num_spheres, into: [] do
+      sphere = ERP.Geometry.Sphere.create( 3 * :random.uniform())
+      ERP.Dynamics.Body.create(sphere, position: Vec3.random_box() |> Vec3.scale(20.0) |> Vec3.subtract({10.0,10.0,10.0}))
+    end
+
+    ERP.add_bodies_to_world(ERPS, bodies)
+  end
+
   def setup_scene(:capsules) do
     ERP.remove_all_bodies_from_world(ERPS);
     capsule1 = ERP.Geometry.Capsule.create(4,0.25)
