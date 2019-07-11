@@ -116,7 +116,7 @@ defmodule ErpVizServerWeb.RoomChannel do
       end
 
       ERP.Dynamics.Body.create( shape,
-                                        position: Vec3.random_ball() |> Vec3.scale(60),
+                                        position: Vec3.random_ball() |> Vec3.scale(60.0),
                                         orientation: Quatern.random(),
                                         angular_velocity: Vec3.random_sphere() |> Vec3.scale( :random.uniform() * 5),
                                         linear_velocity: Vec3.random_sphere() |> Vec3.scale( :random.uniform() * 5)
@@ -135,7 +135,7 @@ defmodule ErpVizServerWeb.RoomChannel do
       end
 
       ERP.Dynamics.Body.create( shape,
-                                        position: Vec3.random_ball() |> Vec3.scale(60),
+                                        position: Vec3.random_ball() |> Vec3.scale(60.0),
                                         orientation: Quatern.random(),
                                         angular_velocity: Vec3.random_sphere() |> Vec3.scale( :random.uniform() * 5),
                                         linear_velocity: Vec3.random_sphere() |> Vec3.scale( :random.uniform() * 5)
