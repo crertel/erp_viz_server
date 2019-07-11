@@ -271,6 +271,12 @@ function r_destroyBody(ref) {
   let body = activeBodies[ref];
   if (body) {
     scene.remove(body);
+    if (body.material) {
+      body.material.dispose();
+    }
+    if (body.geometry) {
+      body.geometry.dispose();
+    }
     delete activeBodies[ref];
   }
 }
@@ -298,19 +304,35 @@ function r_syncScene(world) {
   }
 
   // show the collision info
-  collisionsGroup.children.forEach( (c) => collisionsGroup.remove(c) );
+  //for( let i = collisionsGroup.children.length - 1; i--; i>=0) {
+  while ( collisionsGroup.children.length) {    
+    let i = collisionsGroup.children.length - 1;
+    let c = collisionsGroup.children[i];
+    collisionsGroup.remove(c);
+    if (c.material) {
+      c.material.dispose();
+    }
+    if (c.geometry) {
+      c.geometry.dispose();
+    }    
+  }
+  
   for( let c_index in world.collisions) {
     // c = {:contact_manifold, [{contacts}], world_normal}
     //  @type contact_point :: record(:contact_point, world_point: Vec3.vec3(), depth: number)
-    var c = world.collisions[c_index];
-
-    console.log(c);
-    var normal = (new THREE.Vector3()).fromArray(c[2]);
-    var contacts = c[1];
-    var contactPoint = contacts[0][1];
-    var length = 1.0;
-    var point = new THREE.ArrowHelper(normal, (new THREE.Vector3()).fromArray(contactPoint), length);
-    collisionsGroup.add(point);
+    let c = world.collisions[c_index];
+    if (c) {
+      if (c.length == 3) {
+        var normal = (new THREE.Vector3()).fromArray(c[2]);
+        var contacts = c[1];
+        var contactPoint = contacts[0][1];
+        var length = contacts[0][2];//1.0;
+        var point = new THREE.ArrowHelper(normal, (new THREE.Vector3()).fromArray(contactPoint), length);
+        collisionsGroup.add(point);
+      } else {
+        console.log(JSON.stringify(c));
+      }
+    }    
   }
 }
 

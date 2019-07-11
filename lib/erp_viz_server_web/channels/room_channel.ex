@@ -2,6 +2,9 @@ defmodule ErpVizServerWeb.RoomChannel do
   use Phoenix.Channel
   alias ElixirRigidPhysics, as: ERP
 
+  alias Graphmath.Quatern
+  alias Graphmath.Vec3
+
   def join("room:lobby", _message, socket) do
     send(self(), :after_join)
     {:ok, socket}
@@ -17,7 +20,7 @@ defmodule ErpVizServerWeb.RoomChannel do
 
   def handle_in("server_eval", %{"body"=> body}, socket) do
     try do
-      {ans, bindings} = Code.eval_string(body, [socket: socket, get_commands: &get_commands/0, setup_scene: &setup_scene/1 ] ++ Map.get(socket.assigns, :bindings, []), __ENV__)
+      {ans, bindings} = Code.eval_string(body, [socket: socket, start: &start/0, stop: &stop/0, clear: &clear/0, get_commands: &get_commands/0, setup_scene: &setup_scene/1 ] ++ Map.get(socket.assigns, :bindings, []), __ENV__)
       push(socket, "server_eval_result", %{body: inspect(ans)} )
       {:noreply, assign(socket, :bindings, bindings)}
     rescue
@@ -26,6 +29,10 @@ defmodule ErpVizServerWeb.RoomChannel do
               {:noreply, socket}
     end
   end
+
+  def start(), do: ERP.start_world_simulation(ERPS)
+  def stop(), do: ERP.stop_world_simulation(ERPS)
+  def clear(), do: ERP.remove_all_bodies_from_world(ERPS)
 
   def setup_scene(:spiral) do
     ERP.remove_all_bodies_from_world(ERPS);
@@ -76,6 +83,44 @@ defmodule ErpVizServerWeb.RoomChannel do
     ERP.add_body_to_world(ERPS, b)
     b2 = ERP.Dynamics.Body.create(sphere, position: { 0.0, 0.75, 0.0 })
     ERP.add_body_to_world(ERPS, b2)
+  end
+
+  def setup_scene(:bedlam_small) do
+    bodies = for _x <- 1..100, into: [] do
+      shape = case :random.uniform(3) do
+        1 -> ERP.Geometry.Sphere.create( 5 * :random.uniform())
+        2 -> ERP.Geometry.Capsule.create( 5 * :random.uniform(), 2 * :random.uniform())
+        3 -> ERP.Geometry.Box.create( 5 * :random.uniform(), 5 * :random.uniform(), 5 * :random.uniform())
+      end
+
+      ERP.Dynamics.Body.create( shape,
+                                        position: Vec3.random_ball() |> Vec3.scale(60),
+                                        orientation: Quatern.random(),
+                                        angular_velocity: Vec3.random_sphere() |> Vec3.scale( :random.uniform() * 5),
+                                        linear_velocity: Vec3.random_sphere() |> Vec3.scale( :random.uniform() * 5)
+                                        )
+    end
+
+    ERP.add_bodies_to_world(ERPS, bodies)
+  end
+
+  def setup_scene(:bedlam_large) do
+    bodies = for _x <- 1..100, into: [] do
+      shape = case :random.uniform(3) do
+        1 -> ERP.Geometry.Sphere.create( 5 * :random.uniform())
+        2 -> ERP.Geometry.Capsule.create( 5 * :random.uniform(), 2 * :random.uniform())
+        3 -> ERP.Geometry.Box.create( 5 * :random.uniform(), 5 * :random.uniform(), 5 * :random.uniform())
+      end
+
+      ERP.Dynamics.Body.create( shape,
+                                        position: Vec3.random_ball() |> Vec3.scale(60),
+                                        orientation: Quatern.random(),
+                                        angular_velocity: Vec3.random_sphere() |> Vec3.scale( :random.uniform() * 5),
+                                        linear_velocity: Vec3.random_sphere() |> Vec3.scale( :random.uniform() * 5)
+                                        )
+    end
+
+    ERP.add_bodies_to_world(ERPS, bodies)
   end
 
   def get_commands() do
