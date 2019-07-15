@@ -2,9 +2,11 @@
     <div id="cli-pane">
         <textarea id="chat-input" type="text"></textarea>
         <div id="messages" class="cli-box"></div>
+        <div id="perf-info" class="cli-box"></div>
     </div>
     <div id="viz-container">
     </div>
+    
 </div>
 
 

@@ -64,6 +64,17 @@ function escapeHtml(unsafe) {
        .replace(/'/g, "&#039;");
 };
 
+let timings = {
+  narrowphase: 0,
+  broadphase: 0,
+  acc_struct_pop: 0,
+  last_step: 0,
+  ema_np: 0,
+  ema_bp: 0,
+  ema_asp: 0,
+  ema_lf: 0
+};
+
 let LOG = {
   SIM_STEPS: false
 };
@@ -72,6 +83,7 @@ let channel = socket.channel("room:lobby", {});
 let chatInput = document.getElementById("chat-input");
 let messagesContainer = document.getElementById("messages");
 let $vizContainer = document.getElementById('viz-container');
+let $perfInfo = document.getElementById('perf-info');
 
 let commandBuffer = [];
 let currCommand = 0;
@@ -102,7 +114,7 @@ chatInput.addEventListener("keydown", event => {
       messageItem.className = "client-eval";
       messageItem.innerText = `LOCL: ${escapeHtml(ret)}`;
       messagesContainer.appendChild(messageItem);
-      scrollToLastMessage();
+      scrollToLastMessage();      
     } else if (input[0] == '#') {
       // handle server command
       channel.push("server_eval", {body: input.substring(1)});
@@ -128,6 +140,11 @@ chatInput.addEventListener("keydown", event => {
     event.preventDefault();
   }
 });
+
+function fastEMA( newVal, prevEMA, lookback) {
+  var exp = 2.0 / (lookback+1);  
+  return (newVal * exp) + (prevEMA * (1.0-exp));
+}
 
 
 function scrollToLastMessage() {
@@ -163,7 +180,24 @@ channel.on("sim_msg", payload => {
   if (LOG.SIM_STEPS) {
     console.log(payload.body);
   }
+  timings.narrowphase = world.narrowphase_usecs;
+  timings.broadphase = world.broadphase_usecs;
+  timings.acc_struct_pop = world.acc_struct_pop_usecs;
+  timings.last_step = world.last_step_usecs;
+  timings.ema_np = fastEMA(timings.narrowphase, timings.ema_np, 5);
+  timings.ema_bp = fastEMA(timings.broadphase, timings.ema_bp, 5);
+  timings.ema_asp = fastEMA(timings.acc_struct_pop, timings.ema_asp, 5);
+  timings.ema_lf = fastEMA(timings.last_step, timings.ema_lf, 5);
   r_syncScene(world);
+  $perfInfo.innerHTML = `
+  <table>
+  <tr> <td>acc_struct:</td><td>${(timings.ema_asp / 1000.0).toFixed(2)}</td> </tr>
+  <tr><td>broadphase:</td><td>${(timings.ema_bp / 1000.0).toFixed(2)}</td>  </tr>
+  <tr> <td>narrowphase:</td><td>${(timings.ema_np / 1000.0).toFixed(2)}</td> </tr>
+  <tr> <td>----</td><td>----</td> </tr>
+  <tr> <td><b>last_frame</b></td><td><b>${(timings.ema_lf / 1000.0).toFixed(2)}<br> ( ${(1.0/ (timings.ema_lf / 1e6)).toFixed(2)} Hz) </b></td> </tr>
+  </table>
+  `;
 })
 
 channel.join()
@@ -202,8 +236,6 @@ var camera = new THREE.PerspectiveCamera( 75, 1, 0.1, 1000 );
 var renderer = new THREE.WebGLRenderer();
 
 let controls = new OrbitControls( camera, renderer.domElement );
-
-
 
 controls.enableDamping = true; // an animation loop is required when either damping or auto-rotation are enabled
 controls.dampingFactor = 0.25;
@@ -346,5 +378,13 @@ animate();
 $vizContainer.appendChild( renderer.domElement );
 let vizDimensions = $vizContainer.getBoundingClientRect();
 renderer.setSize( vizDimensions.width, vizDimensions.height );
+
+window.addEventListener( 'resize', onWindowResize, false );
+
+function onWindowResize(){
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize( vizDimensions.width, vizDimensions.height );
+}
 
 export default socket;
