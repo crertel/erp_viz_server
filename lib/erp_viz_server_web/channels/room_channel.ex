@@ -48,6 +48,19 @@ defmodule ErpVizServerWeb.RoomChannel do
     end
   end
 
+  def setup_scene(:tetra) do
+    ERP.remove_all_bodies_from_world(ERPS);
+    f1 = { {0,0,0}, {1,0,0}, {0,0,1} }
+    f2 = { {0,0,0}, {0,1,0}, {1,0,0} }
+    f3 = { {0,0,0}, {0,0,1}, {0,1,0} }
+    f4 = { {0,0,1}, {1,0,0}, {0,1,0} }
+    hull = ERP.Geometry.Hull.create(
+      [f1,f2,f3,f4]
+    )
+    b = ERP.Dynamics.Body.create(hull)
+    ERP.add_body_to_world(ERPS, b)
+  end
+
   def setup_scene(:ball_pit) do
     ERP.remove_all_bodies_from_world(ERPS);
     num_spheres = 100

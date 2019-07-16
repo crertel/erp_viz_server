@@ -231,6 +231,8 @@ var divisions = 40;
 var gridHelper = new THREE.GridHelper( size, divisions, "#2A2", "#888" );
 scene.add( gridHelper );
 
+var axesHelper = new THREE.AxesHelper(10);
+scene.add(axesHelper);
 
 var camera = new THREE.PerspectiveCamera( 75, 1, 0.1, 1000 );
 var renderer = new THREE.WebGLRenderer();
@@ -252,6 +254,23 @@ function r_createBody(ref, body) {
   switch(shape[0]){
     case "box": geometry = new THREE.BoxGeometry( shape[1], shape[2], shape[3] ); break;
     case "sphere": geometry = new THREE.SphereGeometry(shape[1], 16, 12); break;
+    case "hull": geometry = new THREE.Geometry();
+                 let faces = shape[1];
+                 faces.forEach(function(face, idx) {
+                   // face is defined as 3 vec3s
+                   console.log( "Face " + idx);
+                   console.log(face);
+                   geometry.vertices.push(
+                    (new THREE.Vector3()).fromArray(face[0]),
+                    (new THREE.Vector3()).fromArray(face[1]),
+                    (new THREE.Vector3()).fromArray(face[2]),
+                  );
+                  geometry.faces.push( new THREE.Face3( idx*3 + 0, idx*3 + 1, idx*3 + 2));
+                 });
+                 geometry.computeFaceNormals();
+                 break;
+
+
     case "capsule":  var createCapsule = require('primitive-capsule');
                      var capsule = createCapsule(shape[2], shape[1]);
                      geometry = new THREE.BufferGeometry();
@@ -285,10 +304,18 @@ function r_createBody(ref, body) {
   
   var color = new THREE.Color( 0xffffff );
   color.setHex( Math.random() * 0xffffff );
-  var material = new THREE.MeshPhongMaterial( { color: color, wireframe: true } );
+  var material = new THREE.MeshPhongMaterial( { color: color, wireframe: false } );
   var object = new THREE.Mesh( geometry, material );
+  var objectNormals;
+  if (shape[0] == 'hull') {
+    objectNormals = new THREE.FaceNormalsHelper( object, 0.1, 0x00ff00, 1 );
+  } else {
+    objectNormals = new THREE.VertexNormalsHelper( object, 0.1, 0x00ff00, 1 );
+  }
+  
   object.position.set(body.position[0], body.position[1], body.position[2])
   object.setRotationFromQuaternion( new THREE.Quaternion(body.orientation[1],body.orientation[2],body.orientation[3],body.orientation[0]))
+  object.add(objectNormals);
 
   activeBodies[ref] = object;
   scene.add( object );
