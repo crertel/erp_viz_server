@@ -256,21 +256,17 @@ function r_createBody(ref, body) {
     case "sphere": geometry = new THREE.SphereGeometry(shape[1], 16, 12); break;
     case "hull": geometry = new THREE.Geometry();
                  let faces = shape[1];
+                 let vertCountOffset = 0;
                  faces.forEach(function(face, idx) {
-                   // face is defined as 3 vec3s
-                   console.log( "Face " + idx);
-                   console.log(face);
-                   geometry.vertices.push(
-                    (new THREE.Vector3()).fromArray(face[0]),
-                    (new THREE.Vector3()).fromArray(face[1]),
-                    (new THREE.Vector3()).fromArray(face[2]),
-                  );
-                  geometry.faces.push( new THREE.Face3( idx*3 + 0, idx*3 + 1, idx*3 + 2));
+                   var vertCount = face.length;
+                   geometry.vertices = geometry.vertices.concat( face.map((vert) => {return (new THREE.Vector3).fromArray(vert)}));
+                   for (let i = 0; i < vertCount-2; i++) {
+                     geometry.faces.push( new THREE.Face3( vertCountOffset, vertCountOffset + i + 1, vertCountOffset + i + 2));
+                   }
+                   vertCountOffset += vertCount;
                  });
                  geometry.computeFaceNormals();
                  break;
-
-
     case "capsule":  var createCapsule = require('primitive-capsule');
                      var capsule = createCapsule(shape[2], shape[1]);
                      geometry = new THREE.BufferGeometry();

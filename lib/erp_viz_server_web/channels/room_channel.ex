@@ -50,13 +50,37 @@ defmodule ErpVizServerWeb.RoomChannel do
 
   def setup_scene(:tetra) do
     ERP.remove_all_bodies_from_world(ERPS);
-    f1 = { {0,0,0}, {1,0,0}, {0,0,1} }
-    f2 = { {0,0,0}, {0,1,0}, {1,0,0} }
-    f3 = { {0,0,0}, {0,0,1}, {0,1,0} }
-    f4 = { {0,0,1}, {1,0,0}, {0,1,0} }
+    f1 = [ {0.0,0.0,0.0}, {1.0,0.0,0.0}, {0.0,0.0,1.0} ]
+    f2 = [ {0.0,0.0,0.0}, {0.0,1.0,0.0}, {1.0,0.0,0.0} ]
+    f3 = [ {0.0,0.0,0.0}, {0.0,0.0,1.0}, {0.0,1.0,0.0} ]
+    f4 = [ {0.0,0.0,1.0}, {1.0,0.0,0.0}, {0.0,1.0,0.0} ]
     hull = ERP.Geometry.Hull.create(
       [f1,f2,f3,f4]
     )
+    b = ERP.Dynamics.Body.create(hull)
+    ERP.add_body_to_world(ERPS, b)
+  end
+
+  def setup_scene(:tetra_and_sphere) do
+    ERP.remove_all_bodies_from_world(ERPS);
+    f1 = [ {0.0,0.0,0.0}, {1.0,0.0,0.0}, {0.0,0.0,1.0} ]
+    f2 = [ {0.0,0.0,0.0}, {0.0,1.0,0.0}, {1.0,0.0,0.0} ]
+    f3 = [ {0.0,0.0,0.0}, {0.0,0.0,1.0}, {0.0,1.0,0.0} ]
+    f4 = [ {0.0,0.0,1.0}, {1.0,0.0,0.0}, {0.0,1.0,0.0} ]
+    hull = ERP.Geometry.Hull.create(
+      [f1,f2,f3,f4]
+    )
+    b = ERP.Dynamics.Body.create(hull)
+    ERP.add_body_to_world(ERPS, b)
+
+    sphere = ERP.Geometry.Sphere.create(1)
+    b2 = ERP.Dynamics.Body.create(sphere, position: {-4.0,-4.0,-4.0}, linear_velocity: {0.5, 0.5, 0.5})
+    ERP.add_body_to_world(ERPS, b2)
+  end
+
+  def setup_scene(:hull_cube) do
+    ERP.remove_all_bodies_from_world(ERPS)
+    hull = ERP.Geometry.Hull.create_box( 1.0, 2.0, 3.0)
     b = ERP.Dynamics.Body.create(hull)
     ERP.add_body_to_world(ERPS, b)
   end
