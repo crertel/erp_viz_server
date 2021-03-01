@@ -9,7 +9,7 @@
     "phoenix": "file:../deps/phoenix",
     "phoenix_html": "file:../deps/phoenix_html",
     "primitive-capsule": "^3.0.1",
-    "three": "0.105.2",
+    "three": "0.125.0",
     "threejs-orbit-controls": "1.0.3"
   },
   "devDependencies": {
